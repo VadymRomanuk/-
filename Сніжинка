@@ -1,0 +1,24 @@
+def draw_snowflake(n):
+    if n < 5 or n % 2 == 0:
+        print("Розмір має бути непарним числом і більше або дорівнювати 5.")
+        return
+
+    
+    center = n // 2
+
+    for i in range(n):
+        row = [' '] * n 
+        row[center] = '*'
+        if i == center:
+            row = ['*'] * n 
+
+       
+        row[i] = '*'
+        row[n - i - 1] = '*'
+
+        print(''.join(row))
+
+
+
+n = int(input("Введіть розмір сніжинки (непарне число >= 5): "))
+draw_snowflake(n)
