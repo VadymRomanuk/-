@@ -1,4 +1,4 @@
-mport pygame, random
+import pygame, random
 
 pygame.init()
 screen = pygame.display.set_mode((720, 1460))
