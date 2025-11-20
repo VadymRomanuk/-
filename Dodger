@@ -1,0 +1,142 @@
+import pygame, random
+
+pygame.init()
+screen = pygame.display.set_mode((720, 1460))
+font = pygame.font.SysFont(None, 55)  # Шрифт для відображення лічильника
+
+# Лічильник
+score = 0
+s = random.randint(1, 100) 
+S=0
+# Параметри кубів
+cube1_x, cube1_y = 300, 880
+cube1_width, cube1_height = 120, 120
+
+cube2_x, cube2_y = 320, 350  # Зелений квадрат
+cube2_width, cube2_height = 80, 80
+
+cube3_x, cube3_y = 300, 1050
+cube3_width, cube3_height = 120, 120
+
+cube4_x, cube4_y = 470, 1050
+cube4_width, cube4_height = 120, 120
+
+cube5_x, cube5_y = 130, 1050
+cube5_width, cube5_height = 120, 120
+
+# Чорний квадрат
+cube6_x, cube6_y = 60, 100
+cube6_width, cube6_height = 600, 600
+
+# Червоний квадрат
+red_cube_width, red_cube_height = 120, 120
+red_cube_x, red_cube_y = -1200, random.randint(cube6_y, cube6_y + cube6_height - red_cube_height)
+red_cube_speed = 3
+
+# Жовтий квадрат
+yellow_cube_width, yellow_cube_height = 120, 120
+yellow_cube_x, yellow_cube_y = random.randint(cube6_x, cube6_x + cube6_width - yellow_cube_width), -1200
+yellow_cube_speed = 3
+
+mouse_pressed_black = False
+mouse_pressed_violet = False
+mouse_pressed_blue = False
+mouse_pressed_yellow = False
+
+# Створюємо таймер для появи жовтого квадрата кожну 1 секунду
+pygame.time.set_timer(pygame.USEREVENT, 1000)
+
+# Перевірка на зіткнення
+def check_collision(rect1, rect2):
+    return rect1.colliderect(rect2)
+
+# Відображення зеленого куба
+green_visible = True
+
+while True:
+    screen.fill((255, 255, 255))
+    
+    # Малюємо куби
+    pygame.draw.rect(screen, (120, 120, 120), (cube3_x, cube3_y, cube3_width, cube3_height))
+    pygame.draw.rect(screen, (0, 0, 0), (cube6_x, cube6_y, cube6_width, cube6_height))  # Чорний квадрат
+    pygame.draw.rect(screen, (120, 120, 120), (cube4_x, cube4_y, cube4_width, cube4_height))
+    pygame.draw.rect(screen, (120, 120, 120), (cube1_x, cube1_y, cube1_width, cube1_height))
+    pygame.draw.rect(screen, (120, 120, 120), (cube5_x, cube5_y, cube5_width, cube5_height))
+    
+    # Малюємо червоний і жовтий квадрати
+    pygame.draw.rect(screen, (255, 0, 0), (red_cube_x, red_cube_y, red_cube_width, red_cube_height))
+    pygame.draw.rect(screen, (255, 255, 0), (yellow_cube_x, yellow_cube_y, yellow_cube_width, yellow_cube_height))
+
+    # Рух червоного куба по осі X
+    if s >= 50:
+        red_cube_x += red_cube_speed
+        if red_cube_x > 720:
+            red_cube_y = random.randint(100, 580 - red_cube_width)
+            red_cube_x = -red_cube_width
+            s = random.randint(1, 100)       
+            if S==0 :
+             score += 1  # Збільшуємо лічильник
+
+    # Рух жовтого куба по осі Y
+    if s <= 50:
+        yellow_cube_y += yellow_cube_speed
+        if yellow_cube_y > 720:
+            yellow_cube_x = random.randint(60, 540 - yellow_cube_width)
+            yellow_cube_y = -yellow_cube_height
+            s = random.randint(1, 100)
+            if S==0 :
+             score += 1  
+    # Відображення лічильника
+    score_text = font.render(f'бали: {score}', True, (0, 0, 0))
+    screen.blit(score_text, (300, 20))
+
+    # Перевірка на зіткнення жовтого або червоного кубів із зеленим
+    red_rect = pygame.Rect(red_cube_x, red_cube_y, red_cube_width, red_cube_height)
+    yellow_rect = pygame.Rect(yellow_cube_x, yellow_cube_y, yellow_cube_width, yellow_cube_height)
+    green_rect = pygame.Rect(cube2_x, cube2_y, cube2_width, cube2_height)
+
+    if green_visible and (check_collision(red_rect, green_rect) or check_collision(yellow_rect, green_rect)):
+        green_visible = False       
+        S=1
+        
+    # Малюємо зелений куб, якщо він не зник
+    if green_visible:
+        pygame.draw.rect(screen, (0, 255, 0), (cube2_x, cube2_y, cube2_width, cube2_height))
+
+    pygame.display.update()
+
+    # Перевірка подій
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            # ліво
+            if cube4_x <= mouse_x <= cube4_x + cube4_width and cube4_y <= mouse_y <= cube4_y + cube4_height:
+                mouse_pressed_black = True
+            # вправо
+            if cube5_x <= mouse_x <= cube5_x + cube5_width and cube5_y <= mouse_y <= cube5_y + cube5_height:
+                mouse_pressed_violet = True
+            # верх
+            if cube1_x <= mouse_x <= cube1_x + cube1_width and  cube1_y <= mouse_y <= cube1_y + cube1_height:
+                mouse_pressed_yellow = True
+            # вниз
+            if cube3_x <= mouse_x <= cube3_x + cube3_width and cube3_y <= mouse_y <= cube3_y + cube3_height:
+                mouse_pressed_blue = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            mouse_pressed_black = False
+            mouse_pressed_violet = False
+            mouse_pressed_blue = False
+            mouse_pressed_yellow = False
+
+    # Обробка руху зеленого куба
+    if mouse_pressed_yellow and cube2_y > 100:
+        cube2_y -= 5
+    elif mouse_pressed_blue and cube2_y < 700 - cube2_height:  
+        cube2_y += 5
+    elif mouse_pressed_black and cube2_x < 660 - cube2_width:  
+        cube2_x += 5
+    elif mouse_pressed_violet and cube2_x > 60: 
+        cube2_x -= 5
