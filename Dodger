@@ -1,5 +1,4 @@
 import pygame, random
-
 pygame.init()
 screen = pygame.display.set_mode((720, 1460))
 font = pygame.font.SysFont(None, 55)
