@@ -1,116 +1,146 @@
 import pygame, random
+
 pygame.init()
 screen = pygame.display.set_mode((720, 1460))
-font = pygame.font.SysFont(None, 55)
+pygame.display.set_caption("Гра з прапорами")
 
+font = pygame.font.SysFont(None, 55)
+font_big = pygame.font.SysFont(None, 150)
+
+S = 0
 score = 0
 s = random.randint(1, 100)
-S = 0
 
-cube1_x, cube1_y = 300, 880
+cube1_x, cube1_y = 300, 880     
 cube1_width, cube1_height = 120, 120
 
-cube2_x, cube2_y = 320, 350
+cube2_x, cube2_y = 320, 350     
 cube2_width, cube2_height = 80, 80
 
-cube3_x, cube3_y = 300, 1050
+cube3_x, cube3_y = 300, 1050    
 cube3_width, cube3_height = 120, 120
 
-cube4_x, cube4_y = 470, 1050
+cube4_x, cube4_y = 470, 1050    
 cube4_width, cube4_height = 120, 120
 
-cube5_x, cube5_y = 130, 1050
+cube5_x, cube5_y = 130, 1050    
 cube5_width, cube5_height = 120, 120
 
 cube6_x, cube6_y = 60, 100
 cube6_width, cube6_height = 600, 600
 
-red_cube_width, red_cube_height = 120, 120
-red_cube_x = -1200
-red_cube_y = random.randint(cube6_y, cube6_y + cube6_height - red_cube_height)
-red_cube_speed = 3
+# ---- Рухомі прапори ----
+cube_flag_width, cube_flag_height = 120, 120
 
-yellow_cube_width, yellow_cube_height = 120, 120
-yellow_cube_x = random.randint(cube6_x, cube6_x + cube6_width - yellow_cube_width)
-yellow_cube_y = -1200
-yellow_cube_speed = 3
+flag1_x = -1200
+flag1_y = random.randint(cube6_y, cube6_y + cube6_height - cube_flag_height)
+flag1_speed = 2
 
-mouse_pressed_black = False
-mouse_pressed_violet = False
-mouse_pressed_blue = False
-mouse_pressed_yellow = False
+flag2_x = random.randint(cube6_x, cube6_x + cube6_width - cube_flag_width)
+flag2_y = -1200
+flag2_speed = 2
 
-pygame.time.set_timer(pygame.USEREVENT, 1000)
+flag3_x = 720
+flag3_y = random.randint(cube6_y, cube6_y + cube6_height - cube_flag_height)
+flag3_speed = 2
 
-def check_collision(rect1, rect2):
-    return rect1.colliderect(rect2)
-
+pressed = {"black": False, "violet": False, "blue": False, "yellow": False}
+active_fingers = {}
 green_visible = True
+score_given = {"flag1": False, "flag2": False, "flag3": False}
 
-black_grey_color = (120, 120, 120)
-blue_grey_color = (120, 120, 120)
-violet_grey_color = (120, 120, 120)
-grey_color = (120, 120, 120)
+def check_collision(r1, r2):
+    return r1.colliderect(r2)
+
+FLAG_COLORS = [(255,255,255), (0,0,255), (255,0,0)]  # палітра для всіх прапорів
+
+def draw_flag(x, y, width, height):
+    for i, color in enumerate(FLAG_COLORS):
+        pygame.draw.rect(screen, color, (x, y + i*height//3, width, height//3))
+
+key_color = (70, 130, 180)
+key_pressed_color = (40, 90, 140)
+
+game_over = False
+
 while True:
-    screen.fill((255, 255, 255))
+    screen.fill((173, 216, 230))  # світло-блакитний фон
+    pygame.draw.rect(screen, (100, 149, 237), (cube6_x, cube6_y, cube6_width, cube6_height))  # великий квадрат
 
-    # --- темніший колір, якщо натиснуті кнопки ---
-    if mouse_pressed_black:
-        black_grey_color = (90, 90, 90)
-    else:
-        black_grey_color = (120, 120, 120)
-    if mouse_pressed_blue:
-        blue_grey_color = (90, 90, 90)
-    else:
-        blue_grey_color = (120, 120, 120)
-    if mouse_pressed_violet:
-        violet_grey_color = (90, 90, 90)
-    else:
-        violet_grey_color = (120, 120, 120)
-    if mouse_pressed_yellow :
-        yellow_grey_color = (90, 90, 90)
-    else:
-        yellow_grey_color = (120, 120, 120)
-    pygame.draw.rect(screen, blue_grey_color, (cube3_x, cube3_y, cube3_width, cube3_height))
-    pygame.draw.rect(screen, (0, 0, 0), (cube6_x, cube6_y, cube6_width, cube6_height))
-    pygame.draw.rect(screen, black_grey_color, (cube4_x, cube4_y, cube4_width, cube4_height))
-    pygame.draw.rect(screen, yellow_grey_color, (cube1_x, cube1_y, cube1_width, cube1_height))
-    pygame.draw.rect(screen, violet_grey_color, (cube5_x, cube5_y, cube5_width, cube5_height))
-    
-    pygame.draw.rect(screen, (255, 0, 0), (red_cube_x, red_cube_y, red_cube_width, red_cube_height))
-    pygame.draw.rect(screen, (255, 255, 0), (yellow_cube_x, yellow_cube_y, yellow_cube_width, yellow_cube_height))
+    black_color  = key_pressed_color if pressed["black"] else key_color
+    blue_color   = key_pressed_color if pressed["blue"] else key_color
+    violet_color = key_pressed_color if pressed["violet"] else key_color
+    yellow_color = key_pressed_color if pressed["yellow"] else key_color
 
-    if s < 51:
-        red_cube_x += red_cube_speed
-        if S == 0 and red_cube_x == 633:
-            score += 1
-    if red_cube_x > 720:
-        red_cube_x = -red_cube_width
-        red_cube_y = random.randint(100, 580 - red_cube_height)
-        s = random.randint(1, 100)
-    if s > 50:
-        yellow_cube_y += yellow_cube_speed
-        if yellow_cube_y == 759 and S == 0:
-            score += 1
-    if yellow_cube_y > 760:
-        yellow_cube_y = -yellow_cube_height
-        yellow_cube_x = random.randint(60, 540 - yellow_cube_width)
-        s = random.randint(1, 100)
+    pygame.draw.rect(screen, blue_color,   (cube3_x, cube3_y, cube3_width, cube3_height))
+    pygame.draw.rect(screen, black_color,  (cube4_x, cube4_y, cube4_width, cube4_height))
+    pygame.draw.rect(screen, yellow_color, (cube1_x, cube1_y, cube1_width, cube1_height))
+    pygame.draw.rect(screen, violet_color, (cube5_x, cube5_y, cube5_width, cube5_height))
 
-    score_text = font.render(f'бали: {score}', True, (0, 0, 0))
-    screen.blit(score_text, (300, 20))
+    draw_flag(flag1_x, flag1_y, cube_flag_width, cube_flag_height)
+    draw_flag(flag2_x, flag2_y, cube_flag_width, cube_flag_height)
+    draw_flag(flag3_x, flag3_y, cube_flag_width, cube_flag_height)
 
-    red_rect = pygame.Rect(red_cube_x, red_cube_y, red_cube_width, red_cube_height)
-    yellow_rect = pygame.Rect(yellow_cube_x, yellow_cube_y, yellow_cube_width, yellow_cube_height)
-    green_rect = pygame.Rect(cube2_x, cube2_y, cube2_width, cube2_height)
+    # рух прапорів
+    if not game_over:
+        if s < 33:
+            flag1_x += flag1_speed
+            if not score_given["flag1"] and flag1_x >= 720 - cube_flag_width and S==0:
+                score += 1
+                score_given["flag1"] = True
+            if flag1_x > 720:
+                flag1_x = -cube_flag_width
+                flag1_y = random.randint(100,580-cube_flag_height)
+                s = random.randint(1,100)
+                score_given["flag1"] = False
+                flag1_speed += 0.05
 
-    if green_visible and (check_collision(red_rect, green_rect) or check_collision(yellow_rect, green_rect)):
+        if s > 67:
+            flag2_y += flag2_speed
+            if not score_given["flag2"] and flag2_y >= 760 and S==0:
+                score += 1
+                score_given["flag2"] = True
+            if flag2_y > 760:
+                flag2_y = -cube_flag_height
+                flag2_x = random.randint(60,540-cube_flag_width)
+                s = random.randint(1,100)
+                score_given["flag2"] = False
+                flag2_speed += 0.05
+
+        if 33 <= s <= 67:
+            flag3_x -= flag3_speed
+            if not score_given["flag3"] and flag3_x <= 0 and S==0:
+                score += 1
+                score_given["flag3"] = True
+            if flag3_x < -cube_flag_width:
+                flag3_x = 720
+                flag3_y = random.randint(100,580-cube_flag_height)
+                s = random.randint(1,100)
+                score_given["flag3"] = False
+                flag3_speed += 0.05
+
+    score_text = font.render(f"бали: {score}", True, (0,0,0))
+    screen.blit(score_text, (300,20))
+
+    flag1_r = pygame.Rect(flag1_x, flag1_y, cube_flag_width, cube_flag_height)
+    flag2_r = pygame.Rect(flag2_x, flag2_y, cube_flag_width, cube_flag_height)
+    flag3_r = pygame.Rect(flag3_x, flag3_y, cube_flag_width, cube_flag_height)
+    green_r = pygame.Rect(cube2_x, cube2_y, cube2_width, cube2_height)
+
+    # перевірка колізії з прапором України
+    if green_visible and (check_collision(flag1_r, green_r) or check_collision(flag2_r, green_r) or check_collision(flag3_r, green_r)):
         green_visible = False
         S = 1
+        game_over = True  # гра зупиняється
 
     if green_visible:
-        pygame.draw.rect(screen, (0, 87, 183), (cube2_x, cube2_y, cube2_width, cube2_height // 2))
-        pygame.draw.rect(screen, (255, 213, 0), (cube2_x, cube2_y + cube2_height // 2, cube2_width, cube2_height // 2))
+        pygame.draw.rect(screen, (0,87,183), (cube2_x, cube2_y, cube2_width, cube2_height//2))
+        pygame.draw.rect(screen, (255,213,0), (cube2_x, cube2_y+cube2_height//2, cube2_width, cube2_height//2))
+
+    # ❗ Вивід "Ви програли", якщо гра закінчилась
+    if game_over:
+        text = font_big.render("Ви програли", True, (200, 0, 0))
+        screen.blit(text, (50, 600))
 
     pygame.display.update()
 
@@ -119,28 +149,37 @@ while True:
             pygame.quit()
             quit()
 
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            if cube4_x <= mouse_x <= cube4_x + cube4_width and cube4_y <= mouse_y <= cube4_y + cube4_height:
-                mouse_pressed_black = True
-            if cube5_x <= mouse_x <= cube5_x + cube5_width and cube5_y <= mouse_y <= cube5_y + cube5_height:
-                mouse_pressed_violet = True
-            if cube1_x <= mouse_x <= cube1_x + cube1_width and cube1_y <= mouse_y <= cube1_y + cube1_height:
-                mouse_pressed_yellow = True
-            if cube3_x <= mouse_x <= cube3_x + cube3_width and cube3_y <= mouse_y <= cube3_y + cube3_height:
-                mouse_pressed_blue = True
+        if event.type == pygame.FINGERDOWN:
+            x = event.x * 720
+            y = event.y * 1460
+            fid = event.finger_id
 
-        elif event.type == pygame.MOUSEBUTTONUP:
-            mouse_pressed_black = False
-            mouse_pressed_violet = False
-            mouse_pressed_blue = False
-            mouse_pressed_yellow = False
+            if cube4_x <= x <= cube4_x+cube4_width and cube4_y <= y <= cube4_y+cube4_height:
+                pressed["black"] = True
+                active_fingers[fid] = "black"
+            if cube5_x <= x <= cube5_x+cube5_width and cube5_y <= y <= cube5_y+cube5_height:
+                pressed["violet"] = True
+                active_fingers[fid] = "violet"
+            if cube1_x <= x <= cube1_x+cube1_width and cube1_y <= y <= cube1_y+cube1_height:
+                pressed["yellow"] = True
+                active_fingers[fid] = "yellow"
+            if cube3_x <= x <= cube3_x+cube3_width and cube3_y <= y <= cube3_y+cube3_height:
+                pressed["blue"] = True
+                active_fingers[fid] = "blue"
 
-    if mouse_pressed_yellow and cube2_y > 100:
-        cube2_y -= 5
-    elif mouse_pressed_blue and cube2_y < 700 - cube2_height:
-        cube2_y += 5
-    elif mouse_pressed_black and cube2_x < 660 - cube2_width:
-        cube2_x += 5
-    elif mouse_pressed_violet and cube2_x > 60:
-        cube2_x -= 5
+        if event.type == pygame.FINGERUP:
+            fid = event.finger_id
+            if fid in active_fingers:
+                pressed[active_fingers[fid]] = False
+                del active_fingers[fid]
+
+    # керування прапором України, тільки якщо гра не закінчилась
+    if not game_over:
+        if pressed["yellow"] and cube2_y > 100:
+            cube2_y -= 3
+        if pressed["blue"] and cube2_y < 700 - cube2_height:
+            cube2_y += 3
+        if pressed["black"] and cube2_x < 660 - cube2_width:
+            cube2_x += 3
+        if pressed["violet"] and cube2_x > 60:
+            cube2_x -= 3
